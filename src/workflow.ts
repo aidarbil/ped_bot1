@@ -92,7 +92,7 @@ async function runAndApplyGuardrails(inputText: string, config: any, history: an
   const guardrails = Array.isArray(config?.guardrails) ? config.guardrails : [];
   const results = await runGuardrails(inputText, config, context, true);
   const shouldMaskPII = guardrails.find(
-    (g) => g?.name === "Contains PII" && g?.config && g.config.block === false
+    (g: any) => g?.name === "Contains PII" && g?.config && g.config.block === false
   );
   if (shouldMaskPII) {
     const piiOnly = { guardrails: [shouldMaskPII] };
@@ -231,7 +231,7 @@ confidence:
 - <0.6 если очень мутно
 
 Верни только JSON. Никакого текста.`,
-  model: "gpt-5.1-chat-latest",
+  model: "gpt-5.2-chat-latest",
   outputType: pedrabotnikIntentClassifierSchema,
   modelSettings: {
     store: true,
@@ -254,7 +254,7 @@ const pedrabotnikClarifier = new Agent({
   3) Какое направление/должность/предмет вам нужен?
 
 Сформулируй один вопрос, который закрывает самый критичный пробел.`,
-  model: "gpt-5.1-chat-latest",
+  model: "gpt-5.2-chat-latest",
   modelSettings: {
     store: true,
   },
@@ -321,7 +321,7 @@ Output ONLY this message (verbatim) and then call InviteAgent. The user must not
 
 Always finish normal answers with:
 "Подскажите, это помогло?"`,
-  model: "gpt-5.1-chat-latest",
+  model: "gpt-5.2-chat-latest",
   tools: [inviteAgent, fileSearch],
   modelSettings: {
     parallelToolCalls: true,
@@ -371,7 +371,7 @@ const pedrabotnikCourseSelector = new Agent({
 Передай в InviteAgent с фиксированным сообщением эскалации.
 
 В конце: "Подскажите, это помогло?"`,
-  model: "gpt-5.1-chat-latest",
+  model: "gpt-5.2-chat-latest",
   tools: [inviteAgent, fileSearch1],
   modelSettings: {
     parallelToolCalls: true,
@@ -396,7 +396,7 @@ const pedrabotnikContractSupport = new Agent({
 выведи ТОЛЬКО сообщение эскалации и вызови InviteAgent.
 
 В конце обычного ответа: "Подскажите, это помогло?"`,
-  model: "gpt-5.1-chat-latest",
+  model: "gpt-5.2-chat-latest",
   tools: [getContractInfo, inviteAgent, fileSearch],
   modelSettings: {
     parallelToolCalls: true,
@@ -404,7 +404,10 @@ const pedrabotnikContractSupport = new Agent({
   },
 });
 
-type WorkflowInput = { input_as_text: string };
+type WorkflowInput = {
+  input_as_text: string;
+  history?: Array<{ role: "user" | "assistant"; text: string }>;
+};
 
 function withCategoryMessage(category: string): AgentInputItem {
   return {
@@ -413,10 +416,19 @@ function withCategoryMessage(category: string): AgentInputItem {
   } as AgentInputItem;
 }
 
+function toAgentInputItem(item: { role: "user" | "assistant"; text: string }): AgentInputItem {
+  return {
+    role: item.role,
+    content: [{ type: item.role === "user" ? "input_text" : "output_text", text: item.text }],
+  } as AgentInputItem;
+}
+
 // Main code entrypoint
 export const runWorkflow = async (workflow: WorkflowInput) => {
   return await withTrace("Готовый Агент Педработник Новый", async () => {
+    const history = Array.isArray(workflow.history) ? workflow.history : [];
     const conversationHistory: AgentInputItem[] = [
+      ...history.map(toAgentInputItem),
       { role: "user", content: [{ type: "input_text", text: workflow.input_as_text }] },
     ];
     const runner = new Runner({

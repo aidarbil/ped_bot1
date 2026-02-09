@@ -17,6 +17,7 @@
     "zod": "^4.0.0"
   },
   "devDependencies": {
+    "@types/node-telegram-bot-api": "^0.66.8",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3"
   }
