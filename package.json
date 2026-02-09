@@ -1,0 +1,23 @@
+{
+  "name": "pedrabotnik-bot",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/bot.ts",
+    "start": "node --enable-source-maps dist/bot.js",
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@openai/agents": "^0.4.6",
+    "@openai/guardrails": "*",
+    "dotenv": "^16.4.5",
+    "openai": "^4.82.0",
+    "node-telegram-bot-api": "^0.66.0",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}
